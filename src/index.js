@@ -3,40 +3,59 @@ import express from "express";
 const app = express();
 const port = 3000;
 
-app.use(express.static("public"));
 app.use(express.json());
 
+let nextId = 1;
+
 const albums = [
-    { Artist: "Reflections", Title: "The Color Clear", Genre: "Djent" },
     {
-        Artist: "The Devil Wears Prada",
-        Title: "With Roots Above and Branches Below",
-        Genre: "Metalcore",
+        id: nextId++,
+        Artist: "Reflections",
+        Title: "The Color Clear",
+        Genre: "Djent",
     },
-    { Artist: "Woe Is Me", Title: "Numbers", Genre: "Metalcore" },
-    { Artist: "Attack Attack!", Title: "Self Titled", Genre: "Metalcore" },
-    { Artist: "Thy Art Is Murder", Title: "Hate", Genre: "Deathcore" },
+    {
+        id: nextId++,
+        Artist: "Thy Art Is Murder",
+        Title: "Hate",
+        Genre: "Deathcore",
+    },
 ];
 
-app.get("/", (req, res) => {
-    res.send("<h1>Hello Express!</h1><p>Your server is working!</p>");
-});
-
+// GET all albums (200)
 app.get("/albums", (req, res) => {
-    res.json({ total: albums.length, albums });
+    res.status(200).json(albums);
 });
 
+// POST new album (201)
 app.post("/albums", (req, res) => {
-  const newAlbum = {
-    Artist: req.body.Artist,
-    Title: req.body.Title,
-    Genre: req.body.Genre,
-  };
+    if (!req.body.Artist || !req.body.Title || !req.body.Genre) {
+        return res.status(400).json({ error: "Missing album data" });
+    }
 
-  albums.push(newAlbum);
-  res.status(201).json(newAlbum);
+    const newAlbum = {
+        id: nextId++,
+        Artist: req.body.Artist,
+        Title: req.body.Title,
+        Genre: req.body.Genre,
+    };
+
+    albums.push(newAlbum);
+    res.status(201).json(newAlbum);
+});
+
+// GET album by id (200 / 404)
+app.get("/albums/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const album = albums.find((a) => a.id === id);
+
+    if (!album) {
+        return res.status(404).json({ error: "Album not found" });
+    }
+
+    res.status(200).json(album);
 });
 
 app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    console.log(`Server running on port ${port}`);
 });
